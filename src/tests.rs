@@ -1,5 +1,5 @@
+use super::prufer::error::InvalidPruferCode;
 use super::prufer::tree_edges;
-use super::prufer::error::PruferError;
 
 #[test]
 fn test_prufer_4() {
@@ -46,11 +46,5 @@ fn test_invalid_code() {
     const PRUFER_CODE: [usize; 4] = [4, WRONG_CODE, 3, 4];
     let res = tree_edges(&PRUFER_CODE);
 
-    assert_eq!(
-        res,
-        Err(PruferError::InvalidCode {
-            code: WRONG_CODE,
-            seq: &PRUFER_CODE
-        })
-    );
+    assert_eq!(res, Err(InvalidPruferCode::new(WRONG_CODE, &PRUFER_CODE)));
 }
