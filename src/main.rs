@@ -33,9 +33,7 @@ fn tree_edges(prufer_code: &[usize]) -> Vec<(usize, usize)> {
         let res = vertex_set
             .iter()
             .enumerate()
-            .filter(|(_, &v)| v == 0)
-            .into_iter()
-            .map(|(i, _)| i + 1)
+            .filter_map(|(i, &v)| if v == 0 { Some(i + 1) } else { None })
             .take(2)
             .collect::<Vec<_>>();
         (res[0], res[1])
