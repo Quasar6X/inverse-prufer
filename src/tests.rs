@@ -1,4 +1,5 @@
-use super::{tree_edges, PruferError};
+use super::prufer::tree_edges;
+use super::prufer::error::PruferError;
 
 #[test]
 fn test_prufer_4() {
