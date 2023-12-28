@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "graph-inverse-prüfer"
+name = "graph-inverse-prufer"
 version = "0.1.0"
