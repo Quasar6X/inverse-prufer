@@ -27,7 +27,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - uses: xhaiker/rust-release.action@v1.0.0
+      - uses: xhaiker/rust-release.action@v1.0.4
         name: build ${{ matrix.name }}
         with:
           rust_target: ${{ matrix.target }}
