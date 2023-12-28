@@ -91,22 +91,19 @@ pub mod error {
         ///     max(SEQ) > N => Invalid prüfer code
         /// ```
         fn to_string(&self) -> String {
-            match self {
-                InvalidPruferCode {
-                    invalid_value,
-                    code,
-                } => {
-                    format!(
-                        r#"Invalid value in code: {invalid_value}
+            let InvalidPruferCode {
+                invalid_value,
+                code,
+            } = self;
+            format!(
+                r#"Invalid value in code: {invalid_value}
     SEQ = {:?}
     N := |SEQ| + 2 = {}
     max(SEQ) = {invalid_value}
     max(SEQ) > N => Invalid prüfer code"#,
-                        code,
-                        code.len() + 2,
-                    )
-                }
-            }
+                code,
+                code.len() + 2,
+            )
         }
     }
 }
