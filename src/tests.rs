@@ -1,5 +1,5 @@
-use super::prufer::error::InvalidPruferCode;
-use super::prufer::tree_edges;
+use inverse_prufer::error::InvalidPruferCode;
+use inverse_prufer::tree_edges;
 
 #[test]
 fn test_prufer_4() {
