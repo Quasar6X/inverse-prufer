@@ -27,7 +27,7 @@ pub fn tree_edges(prufer_code: &[usize]) -> Result<Vec<(usize, usize)>, error::I
         let res = vertex_set
             .iter()
             .enumerate()
-            .filter_map(|(i, &v)| if v == 0 { Some(i + 1) } else { None })
+            .filter_map(|(i, &v)| (v == 0).then_some(i + 1))
             .take(2)
             .collect::<Vec<_>>();
         (res[0], res[1])
