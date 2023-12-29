@@ -17,13 +17,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Rust
-        uses: ATiltedTree/setup-rust@v1.0.5
-        with:
-          rust-version: stable
-          components: clippy
+      - uses: Swatinem/rust-cache@v2
       - name: Build | Lint
         run: cargo clippy
+
+  check-format:
+    name: Check format
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+      - name: Build | Check format
+        run: cargo fmt --check
 
   compile:
     name: Compile
@@ -32,10 +39,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Rust
-        uses: ATiltedTree/setup-rust@v1.0.5
-        with:
-          rust-version: stable
+      - uses: Swatinem/rust-cache@v2
       - name: Build | Compile
         run: cargo check
 
