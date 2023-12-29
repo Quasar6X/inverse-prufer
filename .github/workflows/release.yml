@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      body:
+        description: "Body of the release"
+        required: false
+      name:
+        description: "Name of the release"
+        required: false
+      prerelease:
+        description: "Marks this release as prerelease"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build-artifacts:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            archive_extension: tar.xz
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            archive_extension: tar.xz
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            file_extension: .exe
+            archive_extension: zip
+
+    runs-on: ${{ matrix.os }}
+    name: Build ${{ matrix.target }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Rust config reader
+        uses: wowjeeez/rust-conf-read@v1.0.2
+        id: project_info
+
+      - name: Install host target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Create Archive Folder
+        run: mkdir ${{ steps.project_info.outputs.crateName }}-${{ matrix.target }}
+
+      - name: Copy Artifact
+        env:
+          binary_name: ${{ steps.project_info.outputs.crateName }}${{ matrix.file_extension }}
+        run: cp target/${{ matrix.target }}/release/${{ env.binary_name }} ${{ steps.project_info.outputs.crateName }}-${{ matrix.target }}
+
+      - name: Create Archive
+        run: tar -acf ${{ steps.project_info.outputs.crateName }}-${{ matrix.target }}.${{ matrix.archive_extension }} ${{ steps.project_info.outputs.crateName }}-${{ matrix.target }}
+
+      - name: Store Archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.project_info.outputs.crateName }}-${{ matrix.target }}
+          path: ${{ steps.project_info.outputs.crateName }}-${{ matrix.target }}.${{ matrix.archive_extension }}
+
+  create-release:
+    needs: [build-artifacts]
+    runs-on: ubuntu-latest
+    name: Create Release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rust config reader
+        uses: wowjeeez/rust-conf-read@v1.0.2
+        id: project_info
+      - uses: actions/download-artifact@v4
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "**/*.tar.xz,**/*.zip"
+          body: ${{ github.event.inputs.body }}
+          name: ${{ github.event.inputs.name }}
+          prerelease: ${{ github.event.inputs.prerelease }}
+          skipIfReleaseExists: true
+          tag: v${{ steps.project_info.outputs.version }}
