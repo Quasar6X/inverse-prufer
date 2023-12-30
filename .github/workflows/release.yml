@@ -37,12 +37,15 @@ jobs:
       matrix:
         include:
           - target: x86_64-unknown-linux-gnu
+            target_short: linux-gnu
             os: ubuntu-latest
             archive_extension: tar.xz
           - target: x86_64-apple-darwin
+            target_short: macOS
             os: macos-latest
             archive_extension: tar.xz
           - target: x86_64-pc-windows-msvc
+            target_short: windows
             os: windows-latest
             file_extension: .exe
             archive_extension: zip
@@ -71,10 +74,26 @@ jobs:
       - name: Copy Artifact
         env:
           binary_name: ${{ steps.project_info.outputs.crateName }}${{ matrix.file_extension }}
-        run: cp target/${{ matrix.target }}/release/${{ env.binary_name }} ${{ steps.project_info.outputs.crateName }}-${{ matrix.target }}
+        run: >
+          cp target/${{ matrix.target }}/release/${{ env.binary_name }} 
+          ${{ steps.project_info.outputs.crateName }}-${{ matrix.target }}/
+          ${{ steps.project_info.outputs.crateName }}-${{ matrix.target_short }}${{ matrix.file_extension }}
+
+      - name: Create README.pdf
+        uses: baileyjm02/markdown-to-pdf@v1
+        with:
+          input_path: README.md
+          output_dir: ${{ steps.project_info.outputs.crateName }}-${{ matrix.target }}
+          build_html: false
+
+      - name: Copy License
+        run: >
+          cp LICENSE ${{ steps.project_info.outputs.crateName }}-${{ matrix.target }}
 
       - name: Create Archive
-        run: tar -acf ${{ steps.project_info.outputs.crateName }}-${{ matrix.target }}.${{ matrix.archive_extension }} ${{ steps.project_info.outputs.crateName }}-${{ matrix.target }}
+        run: >
+          tar -acf ${{ steps.project_info.outputs.crateName }}-${{ matrix.target }}.${{ matrix.archive_extension }}
+          ${{ steps.project_info.outputs.crateName }}-${{ matrix.target }}
 
       - name: Store Archive
         uses: actions/upload-artifact@v4
@@ -105,4 +124,4 @@ jobs:
           name: ${{ github.event.inputs.name }}
           prerelease: ${{ github.event.inputs.prerelease }}
           tag: v${{ steps.project_info.outputs.version }}
-          updateOnlyUnreleased: true  # disable updating normal releases
+          updateOnlyUnreleased: true # disable updating normal releases
