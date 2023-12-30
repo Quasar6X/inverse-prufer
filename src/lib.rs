@@ -6,36 +6,36 @@
 ///
 /// If the given Prüfer code is invlaid the function returns the error variant.
 /// See: [`error::InvalidPruferCode`] for more information.
-pub fn tree_edges(prufer_code: &[usize]) -> Result<Vec<(usize, usize)>, error::InvalidPruferCode> {
+pub fn tree_edges(prufer_code: &[u64]) -> Result<Vec<(u64, u64)>, error::InvalidPruferCode> {
     let vertecies = prufer_code.len() + 2;
-    let mut vertex_set: Vec<i64> = [0].repeat(vertecies);
+    let mut vertex_set: Vec<i8> = [0].repeat(vertecies);
 
     for &code in prufer_code.iter() {
-        if code > vertecies {
+        if code > vertecies as u64 {
             return Err(error::InvalidPruferCode::new(code, prufer_code));
         }
 
-        vertex_set[code - 1] += 1;
+        vertex_set[code as usize - 1] += 1;
     }
 
-    let mut edges: Vec<(usize, usize)> = Vec::with_capacity(vertecies + 1);
+    let mut edges = Vec::with_capacity(vertecies + 1);
 
     for &code in prufer_code.iter() {
         for (j, v) in vertex_set.iter_mut().enumerate() {
             if *v == 0 {
                 *v = -1;
-                edges.push((j + 1, code));
-                vertex_set[code - 1] -= 1;
+                edges.push(((j + 1) as u64, code));
+                vertex_set[code as usize - 1] -= 1;
                 break;
             }
         }
     }
 
-    fn create_last_pair(vertex_set: &[i64]) -> (usize, usize) {
+    fn create_last_pair(vertex_set: &[i8]) -> (u64, u64) {
         let res = vertex_set
             .iter()
             .enumerate()
-            .filter_map(|(i, &v)| (v == 0).then_some(i + 1))
+            .filter_map(|(i, &v)| (v == 0).then_some((i + 1) as u64))
             .take(2)
             .collect::<Vec<_>>();
         (res[0], res[1])
@@ -54,13 +54,13 @@ pub mod error {
     /// the code + 2. Created by [`super::tree_edges`].
     #[derive(Debug, PartialEq)]
     pub struct InvalidPruferCode<'a> {
-        invalid_value: usize,
-        code: &'a [usize],
+        invalid_value: u64,
+        code: &'a [u64],
     }
 
     impl<'a> InvalidPruferCode<'a> {
         /// Constructs a new `InvalidPruferCode`.
-        pub fn new(invalid_value: usize, code: &'a [usize]) -> Self {
+        pub fn new(invalid_value: u64, code: &'a [u64]) -> Self {
             InvalidPruferCode {
                 invalid_value,
                 code,
@@ -80,7 +80,7 @@ pub mod error {
         /// #   Ok(_) => panic!(),
         /// #   Err(e) => e,
         /// # };
-        /// println!("{}", res.to_string());
+        /// eprintln!("{}", res.to_string());
         /// ```
         /// Prints the formatted [`String`]:
         /// ```text

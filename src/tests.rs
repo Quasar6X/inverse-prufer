@@ -1,9 +1,8 @@
-use inverse_prufer::error::InvalidPruferCode;
-use inverse_prufer::tree_edges;
+use inverse_prufer::{error::InvalidPruferCode, tree_edges};
 
 #[test]
 fn test_prufer_4() {
-    const PRUFER_CODE: [usize; 4] = [4, 1, 3, 4];
+    const PRUFER_CODE: [u64; 4] = [4, 1, 3, 4];
     let res = tree_edges(&PRUFER_CODE);
 
     match res {
@@ -14,7 +13,7 @@ fn test_prufer_4() {
 
 #[test]
 fn test_prufer_5() {
-    const PRUFER_CODE: [usize; 5] = [5, 1, 2, 4, 3];
+    const PRUFER_CODE: [u64; 5] = [5, 1, 2, 4, 3];
     let res = tree_edges(&PRUFER_CODE);
 
     match res {
@@ -28,7 +27,7 @@ fn test_prufer_5() {
 
 #[test]
 fn test_prufer_6() {
-    const PRUFER_CODE: [usize; 6] = [1, 1, 1, 1, 6, 5];
+    const PRUFER_CODE: [u64; 6] = [1, 1, 1, 1, 6, 5];
     let res = tree_edges(&PRUFER_CODE);
 
     match res {
@@ -42,8 +41,8 @@ fn test_prufer_6() {
 
 #[test]
 fn test_invalid_code() {
-    const WRONG_CODE: usize = 7;
-    const PRUFER_CODE: [usize; 4] = [4, WRONG_CODE, 3, 4];
+    const WRONG_CODE: u64 = 7;
+    const PRUFER_CODE: [u64; 4] = [4, WRONG_CODE, 3, 4];
     let res = tree_edges(&PRUFER_CODE);
 
     assert_eq!(res, Err(InvalidPruferCode::new(WRONG_CODE, &PRUFER_CODE)));
