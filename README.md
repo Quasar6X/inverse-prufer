@@ -1,17 +1,22 @@
 # Inverse Prüfer calculator in rust
 
-Calculates the resulting tree from a given Prüfer code. The tree is given
-by an edge list.
+Calculates the resulting labeled tree from a given Prüfer code. The tree is given by an edge set.
 
-## Example
+## Run example
 
-```rust
-use inverse_prufer::{error::InvalidPruferCode, tree_edges};
-
-let prufer = [4, 1, 3, 4];
-let res: Result<Vec<(usize, usize)>, InvalidPruferCode> = tree_edges(&prufer);
-match res {
-    Ok(edges) => println!("The edge set E(G) is:\n{:#?}", &edges),
-    Err(e) => println!("{}", e.to_string()),
-}
+Command:
+```sh
+./inverse_prufer 4 1 3 4
 ```
+Output:
+```
+The edge set E(G) is:
+[(2, 4), (5, 1), (1, 3), (3, 4), (4, 6)]
+```
+
+## Project stucture
+
+- The algorithm can bo found under `src/lib.rs`.  
+The function `tree_edges` calcualtes the labeled tree from the Prüfer code.
+- There are some tests written in `src/test.rs`.
+- The argument parsing part is in `src/main.rs`.

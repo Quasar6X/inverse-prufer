@@ -4,7 +4,7 @@ use inverse_prufer::tree_edges;
 #[derive(Parser, Debug)]
 #[command(about, author, version)]
 struct Cli {
-    /// Prüfer sequence
+    /// Prüfer sequence (example: 4 1 3 4)
     #[arg(name = "SEQ", required = true, value_delimiter = ' ', value_parser = clap::value_parser!(u64).range(1..))]
     code: Vec<u64>,
 }
