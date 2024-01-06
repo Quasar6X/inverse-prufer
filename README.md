@@ -10,8 +10,8 @@ Command:
 ```
 Output:
 ```
-The edge set E(G) is:
-[(2, 4), (5, 1), (1, 3), (3, 4), (4, 6)]
+The edge set is:
+E(G) = [(2, 4), (5, 1), (1, 3), (3, 4), (4, 6)]
 ```
 
 ## Project stucture

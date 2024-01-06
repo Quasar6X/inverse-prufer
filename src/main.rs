@@ -1,21 +1,30 @@
+use std::process::ExitCode;
+
 use clap::Parser;
-use inverse_prufer::tree_edges;
+use inverse_prufer::{tree_edges, PruferCode};
 
 #[derive(Parser, Debug)]
 #[command(about, author, version)]
 struct Cli {
     /// Prüfer sequence (example: 4 1 3 4)
-    #[arg(name = "SEQ", required = true, value_delimiter = ' ', value_parser = clap::value_parser!(u64).range(1..))]
+    #[arg(name = "SEQ", required = true, value_delimiter = ' ')]
     code: Vec<u64>,
 }
 
 #[doc(hidden)]
-fn main() {
+fn main() -> ExitCode {
     let args = Cli::parse();
-    let res = tree_edges(&args.code);
-    match res {
-        Ok(edges) => println!("The edge set E(G) is:\n{:?}", &edges),
-        Err(e) => eprintln!("{}", e.to_string()),
+    let code = PruferCode::try_from(args.code.as_slice());
+
+    match code {
+        Ok(code) => {
+            println!("The edge set is:\nE(G) = {:?}", tree_edges(&code));
+            ExitCode::SUCCESS
+        }
+        Err(e) => {
+            eprintln!("{}", e.to_string());
+            ExitCode::FAILURE
+        }
     }
 }
 
