@@ -1,8 +1,4 @@
 .vscode/
-<<<<<<< HEAD
-target/
-=======
 /target
 
 inverse-prufer.code-workspace
->>>>>>> 885beeb (Prepare for release)

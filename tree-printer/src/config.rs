@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct Inset {
     top: i32,
     right: i32,
@@ -70,14 +70,12 @@ impl InsetBuilder {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum HorizontalAlign {
     LEFT,
     CENTER,
     RIGHT,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum VerticalAlign {
     TOP,
     MIDDLE,

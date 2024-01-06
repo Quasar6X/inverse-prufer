@@ -359,6 +359,8 @@ dependencies = [
  "thread_local",
  "tracing-core",
 ]
+name = "tree-printer"
+version = "0.1.0"
 
 [[package]]
 name = "tree-printer"
