@@ -10,6 +10,7 @@ pub fn tree_edges(prufer_code: &[u64]) -> Result<Vec<(u64, u64)>, error::Invalid
     let vertecies = prufer_code.len() + 2;
     let mut vertex_set: Vec<i8> = [0].repeat(vertecies);
 
+    // count the occurence of vertecies in `prufer_code`
     for &code in prufer_code.iter() {
         if code > vertecies as u64 {
             return Err(error::InvalidPruferCode::new(code, prufer_code));
@@ -18,19 +19,22 @@ pub fn tree_edges(prufer_code: &[u64]) -> Result<Vec<(u64, u64)>, error::Invalid
         vertex_set[code as usize - 1] += 1;
     }
 
-    let mut edges = Vec::with_capacity(vertecies + 1);
+    let mut edges = Vec::with_capacity(vertecies - 1);
 
+    // create edge pairs
     for &code in prufer_code.iter() {
         for (j, v) in vertex_set.iter_mut().enumerate() {
             if *v == 0 {
                 *v = -1;
-                edges.push(((j + 1) as u64, code));
+                edges.push((j as u64 + 1, code));
                 vertex_set[code as usize - 1] -= 1;
                 break;
             }
         }
     }
 
+    // find last two zeros in vertex set and return the corresponding vertecies
+    // (their indicies + 1)
     fn create_last_pair(vertex_set: &[i8]) -> (u64, u64) {
         let res = vertex_set
             .iter()
@@ -68,7 +72,7 @@ pub mod error {
         }
     }
 
-    impl<'a> ToString for InvalidPruferCode<'a> {
+    impl ToString for InvalidPruferCode<'_> {
         /// Gives a mathematical explanation of why
         /// this [`InvalidPruferCode`] was created.
         ///
@@ -94,7 +98,7 @@ pub mod error {
             let InvalidPruferCode {
                 invalid_value,
                 code,
-            } = self;
+            } = *self;
             format!(
                 r#"Invalid value in code: {invalid_value}
     SEQ = {:?}
