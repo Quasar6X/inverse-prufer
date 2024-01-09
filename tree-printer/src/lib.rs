@@ -1,13 +1,8 @@
-use std::io::Write;
-
 pub mod tree_node;
 pub mod config;
-pub mod traditional;
 pub mod line_buffer;
-
-pub trait TreePrinter {
-    fn print(root_node: impl tree_node::TreeNode, out: impl Write);
-}
+pub mod printer;
+mod util;
 
 #[cfg(test)]
 mod tests {

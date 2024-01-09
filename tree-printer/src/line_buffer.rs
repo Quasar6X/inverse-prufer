@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::io::{Error, Write};
 
 pub struct LineBuffer<'a, W> {
     out: &'a mut W,
@@ -22,13 +22,13 @@ impl<'a, W: Write> LineBuffer<'a, W> {
         }
     }
 
-    pub fn flush_all(&mut self) {
-        self.flush(self.flushed_row_count + self.lines.len());
+    pub fn flush_all(&mut self) -> Result<(), Error> {
+        self.flush(self.flushed_row_count + self.lines.len())
     }
 
-    pub fn flush(&mut self, rows: usize) {
+    pub fn flush(&mut self, rows: usize) -> Result<(), Error> {
         if rows <= self.flushed_row_count {
-            return;
+            return Ok(());
         }
 
         let current_line_count = self.lines.len();
@@ -36,10 +36,16 @@ impl<'a, W: Write> LineBuffer<'a, W> {
 
         if current_line_count <= delete_line_count {
             for line in self.lines.iter() {
-                self.out.write((line.clone() + "\n").as_bytes());
+                self.out.write((line.clone() + "\n").as_bytes())?;
             }
+            self.lines.clear();
+            Ok(())
         } else {
-            
+            for i in 0..delete_line_count {
+                self.out.write((self.lines[i].clone() + "\n").as_bytes())?;
+            }
+            self.lines = Vec::from_iter(self.lines[delete_line_count..current_line_count].iter().cloned());
+            Ok(())
         }
     }
 

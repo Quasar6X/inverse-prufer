@@ -1,17 +1,20 @@
+use std::{hash::Hash, fmt::Debug};
+
 use crate::config::Inset;
 
-pub trait TreeNode {
+pub trait TreeNode: Debug + Eq + Hash {
     fn content(&self) -> &str;
 
-    fn children(&self) -> &Vec<impl TreeNode>;
+    fn children(&self) -> &Vec<Box<dyn TreeNode>>;
 
     fn insets(&self) -> &Inset;
 }
 
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct SimpleTreeNode {
     content: String,
     inset: Inset,
-    children: Vec<SimpleTreeNode>,
+    children: Vec<Box<dyn TreeNode>>,
 }
 
 impl SimpleTreeNode {
@@ -27,7 +30,7 @@ impl SimpleTreeNode {
         Self::new(content, Inset::empty_inset())
     }
 
-    pub fn add_child(&mut self, node: SimpleTreeNode) {
+    pub fn add_child(&mut self, node: Box<dyn TreeNode>) {
         self.children.push(node);
     }
 }
@@ -37,7 +40,7 @@ impl TreeNode for SimpleTreeNode {
         self.content.as_str()
     }
 
-    fn children(&self) -> &Vec<impl TreeNode> {
+    fn children(&self) -> &Vec<Box<dyn TreeNode>> {
         &self.children
     }
 
