@@ -1,4 +1,4 @@
 .vscode/
 /target
 
-inverse-prufer.code-workspace
+*.code-workspace

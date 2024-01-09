@@ -1,6 +1,6 @@
-use std::io::Write;
+use std::io::{Error, Write};
 
-pub struct LineBuffer<'a, W> {
+pub struct LineBuffer<'a, W: Write> {
     out: &'a mut W,
     flushed_row_count: usize,
     lines: Vec<String>,
@@ -16,19 +16,19 @@ impl<'a, W: Write> LineBuffer<'a, W> {
     }
 
     pub fn write(&mut self, row: usize, col: usize, text: &str) {
-        let text_lines = text.lines().collect::<Vec<_>>();
-        for (i, &line) in text_lines.iter().enumerate() {
+        let text_lines = text.lines();
+        for (i, line) in text_lines.enumerate() {
             self.write_line(row + i, col, line);
         }
     }
 
-    pub fn flush_all(&mut self) {
-        self.flush(self.flushed_row_count + self.lines.len());
+    pub fn flush_all(&mut self) -> Result<(), Error> {
+        self.flush(self.flushed_row_count + self.lines.len())
     }
 
-    pub fn flush(&mut self, rows: usize) {
+    pub fn flush(&mut self, rows: usize) -> Result<(), Error> {
         if rows <= self.flushed_row_count {
-            return;
+            return Ok(());
         }
 
         let current_line_count = self.lines.len();
@@ -36,11 +36,21 @@ impl<'a, W: Write> LineBuffer<'a, W> {
 
         if current_line_count <= delete_line_count {
             for line in self.lines.iter() {
-                self.out.write((line.clone() + "\n").as_bytes());
+                self.out.write((line.clone() + "\n").as_bytes())?;
             }
+            self.lines.clear();
         } else {
-            
+            for i in 0..delete_line_count {
+                self.out.write((self.lines[i].clone() + "\n").as_bytes())?;
+            }
+            self.lines = Vec::from_iter(
+                self.lines[delete_line_count..current_line_count]
+                    .iter()
+                    .cloned(),
+            );
         }
+
+        Ok(())
     }
 
     fn write_line(&mut self, row: usize, col: usize, text_line: &str) {
