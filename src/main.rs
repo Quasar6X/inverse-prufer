@@ -1,6 +1,7 @@
-use std::process::ExitCode;
+#![doc(hidden)]
 
 use clap::Parser;
+use color_eyre::eyre::Result;
 use inverse_prufer::{tree_edges, PruferCode};
 
 #[derive(Parser, Debug)]
@@ -11,21 +12,16 @@ struct Cli {
     code: Vec<u64>,
 }
 
-#[doc(hidden)]
-fn main() -> ExitCode {
-    let args = Cli::parse();
-    let code = PruferCode::try_from(args.code.as_slice());
+fn main() -> Result<()> {
+    color_eyre::install()?;
 
-    match code {
-        Ok(code) => {
-            println!("The edge set is:\nE(G) = {:?}", tree_edges(&code));
-            ExitCode::SUCCESS
-        }
-        Err(e) => {
-            eprintln!("{}", e.to_string());
-            ExitCode::FAILURE
-        }
-    }
+    let Cli { code } = Cli::parse();
+    let code = PruferCode::try_from(code.as_slice())?;
+
+    println!("The supplied Prüfer code is:\n{code}");
+    println!("The edge set is:\nE(G) = {:?}", tree_edges(&code));
+
+    Ok(())
 }
 
 #[cfg(test)]

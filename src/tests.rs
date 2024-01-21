@@ -10,7 +10,7 @@ fn test_prufer_4() {
             [(2, 4), (5, 1), (1, 3), (3, 4), (4, 6)],
             tree_edges(&code).as_slice()
         ),
-        Err(e) => assert!(false, "{}", e.to_string()),
+        Err(e) => panic!("{}", e.to_string()),
     }
 }
 
@@ -24,7 +24,7 @@ fn test_prufer_5() {
             [(6, 5), (5, 1), (1, 2), (2, 4), (4, 3), (3, 7)],
             tree_edges(&code).as_slice()
         ),
-        Err(e) => assert!(false, "{}", e.to_string()),
+        Err(e) => panic!("{}", e.to_string()),
     }
 }
 
@@ -38,7 +38,7 @@ fn test_prufer_6() {
             [(2, 1), (3, 1), (4, 1), (7, 1), (1, 6), (6, 5), (5, 8)],
             tree_edges(&code).as_slice()
         ),
-        Err(e) => assert!(false, "{}", e.to_string()),
+        Err(e) => panic!("{}", e.to_string()),
     }
 }
 
@@ -52,7 +52,7 @@ fn test_invalid_code_large() {
         res,
         Err(InvalidPruferCode::ValueTooLarge {
             invalid_value: WRONG_CODE,
-            code: &PRUFER_CODE
+            code: PRUFER_CODE.into()
         })
     );
 }
@@ -64,6 +64,8 @@ fn test_invalid_code_zero() {
 
     assert_eq!(
         res,
-        Err(InvalidPruferCode::ValueIsZero { code: &PRUFER_CODE })
-    )
+        Err(InvalidPruferCode::ValueIsZero {
+            code: PRUFER_CODE.into()
+        })
+    );
 }
