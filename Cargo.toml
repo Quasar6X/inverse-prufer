@@ -9,7 +9,6 @@ edition = "2021"
 clap = { version = "4.4.12", features = ["derive"] }
 tree-printer = { version = "0.1.0", path = "./tree-printer" }
 color-eyre = "0.6.2"
-tree-printer = { version = "0.1.0", path = "./tree-printer" }
 
 [lints.rust]
 unsafe_code = "forbid"

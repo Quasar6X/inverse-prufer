@@ -5,7 +5,7 @@ use crate::tree_node::TreeNode;
 pub mod traditional;
 
 pub trait TreePrinter<W: Write> {
-    fn print(&self, root_node: Box<dyn TreeNode>, out: W);
+    fn print(&self, root_node: Box<dyn TreeNode>, out: W) -> anyhow::Result<()>;
 }
 
 pub struct MappingTreePrinter<W, P, F>
@@ -40,7 +40,7 @@ where
     P: TreePrinter<W>,
     F: Fn(Box<dyn TreeNode>) -> Box<dyn TreeNode>,
 {
-    fn print(&self, root_node: Box<dyn TreeNode>, out: W) {
-        self.printer.print((self.mapper)(root_node), out);
+    fn print(&self, root_node: Box<dyn TreeNode>, out: W) -> anyhow::Result<()> {
+        self.printer.print((self.mapper)(root_node), out)
     }
 }

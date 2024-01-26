@@ -1,13 +1,39 @@
+use num_traits::int::PrimInt;
 use std::io::{Error, Write};
 
-pub struct LineBuffer<'a, W: Write> {
-    out: &'a mut W,
+pub struct LinePosition {
+    row: usize,
+    col: usize,
+}
+
+impl LinePosition {
+    pub fn new<Num1, Num2>(row: Num1, col: Num2) -> anyhow::Result<Self>
+    where
+        Num1: PrimInt,
+        Num2: PrimInt,
+        usize: TryFrom<Num1> + TryFrom<Num2>,
+        <usize as TryFrom<Num1>>::Error: std::error::Error + Send + Sync + 'static,
+        <usize as TryFrom<Num2>>::Error: std::error::Error + Send + Sync + 'static,
+    {
+        let row = usize::try_from(row)?;
+        let col = usize::try_from(col)?;
+        Ok(Self { row, col })
+    }
+
+    #[must_use]
+    pub const fn from_usize(row: usize, col: usize) -> Self {
+        Self { row, col }
+    }
+}
+
+pub struct LineBuffer<'w, W: Write> {
+    out: &'w mut W,
     flushed_row_count: usize,
     lines: Vec<String>,
 }
 
-impl<'a, W: Write> LineBuffer<'a, W> {
-    pub fn new(out: &'a mut W) -> Self {
+impl<'w, W: Write> LineBuffer<'w, W> {
+    pub fn new(out: &'w mut W) -> Self {
         LineBuffer {
             out,
             flushed_row_count: 0,
@@ -15,17 +41,21 @@ impl<'a, W: Write> LineBuffer<'a, W> {
         }
     }
 
-    pub fn write(&mut self, row: usize, col: usize, text: &str) {
+    pub fn write(&mut self, LinePosition { row, col }: LinePosition, text: &str) {
         let text_lines = text.lines();
         for (i, line) in text_lines.enumerate() {
-            self.write_line(row + i, col, line);
+            self.write_line(LinePosition { row: row + i, col }, line);
         }
     }
 
+    //TODO docs
+    /// # Errors
     pub fn flush_all(&mut self) -> Result<(), Error> {
         self.flush(self.flushed_row_count + self.lines.len())
     }
 
+    //TODO docs
+    /// # Errors
     pub fn flush(&mut self, rows: usize) -> Result<(), Error> {
         if rows <= self.flushed_row_count {
             return Ok(());
@@ -35,25 +65,22 @@ impl<'a, W: Write> LineBuffer<'a, W> {
         let delete_line_count = rows - self.flushed_row_count;
 
         if current_line_count <= delete_line_count {
-            for line in self.lines.iter() {
-                self.out.write((line.clone() + "\n").as_bytes())?;
+            for line in &self.lines {
+                self.out.write_all((line.clone() + "\n").as_bytes())?;
             }
             self.lines.clear();
         } else {
             for i in 0..delete_line_count {
-                self.out.write((self.lines[i].clone() + "\n").as_bytes())?;
+                self.out
+                    .write_all((self.lines[i].clone() + "\n").as_bytes())?;
             }
-            self.lines = Vec::from_iter(
-                self.lines[delete_line_count..current_line_count]
-                    .iter()
-                    .cloned(),
-            );
+            self.lines = self.lines[delete_line_count..current_line_count].to_vec();
         }
 
         Ok(())
     }
 
-    fn write_line(&mut self, row: usize, col: usize, text_line: &str) {
+    fn write_line(&mut self, LinePosition { row, col }: LinePosition, text_line: &str) {
         if row < self.flushed_row_count {
             return;
         }
@@ -63,15 +90,15 @@ impl<'a, W: Write> LineBuffer<'a, W> {
 
         let original_line = {
             if line_index < current_line_count {
-                &self.lines[line_index as usize]
+                &self.lines[line_index]
             } else {
-                (current_line_count..=line_index).for_each(|_| self.lines.push("".to_owned()));
+                (current_line_count..=line_index).for_each(|_| self.lines.push(String::new()));
                 ""
             }
         };
 
         let new_line = Self::write_into_line(original_line, col, text_line);
-        self.lines[line_index] = new_line
+        self.lines[line_index] = new_line;
     }
 
     fn write_into_line(context_line: &str, pos: usize, text_line: &str) -> String {
@@ -86,8 +113,8 @@ impl<'a, W: Write> LineBuffer<'a, W> {
                         .collect::<String>(),
                 )
             } else {
-                let end = context_line.chars().map(|c| c.len_utf8()).take(pos).sum();
-                (context_line[..end].to_owned(), "".to_owned())
+                let end = context_line.chars().map(char::len_utf8).take(pos).sum();
+                (context_line[..end].to_owned(), String::new())
             }
         };
 

@@ -4,11 +4,18 @@ use std::{
 };
 
 use crate::config::Inset;
-use uuid::Uuid;
+
+trait Id {
+    fn id(&self) -> usize;
+}
+
+impl Id for dyn TreeNode {
+    fn id(&self) -> usize {
+        (self as *const dyn TreeNode).cast::<()>() as usize
+    }
+}
 
 pub trait TreeNode {
-    fn id(&self) -> Uuid;
-
     fn content(&self) -> String;
 
     fn children(&self) -> &[Box<dyn TreeNode>];
@@ -28,16 +35,6 @@ pub trait TreeNode {
     }
 }
 
-// trait DynHash {
-//     fn dyn_hash(&self, state: &mut dyn Hasher);
-// }
-
-// impl<T: Hash> DynHash for T {
-//     fn dyn_hash(&self, mut state: &mut dyn Hasher) {
-//         self.hash(&mut state);
-//     }
-// }
-
 impl Hash for dyn TreeNode {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.id().hash(state);
@@ -50,6 +47,8 @@ impl PartialEq for dyn TreeNode {
     }
 }
 
+impl Eq for dyn TreeNode {}
+
 impl Debug for dyn TreeNode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("TreeNode")
@@ -59,25 +58,24 @@ impl Debug for dyn TreeNode {
     }
 }
 
-impl Eq for dyn TreeNode {}
-
 pub struct SimpleTreeNode {
-    id: Uuid,
     content: String,
     inset: Inset,
     children: Vec<Box<dyn TreeNode>>,
 }
 
 impl SimpleTreeNode {
+
+    #[must_use]
     pub fn with_inset(content: &str, inset: Inset) -> Self {
         Self {
-            id: Uuid::new_v4(),
             content: content.to_owned(),
             inset,
             children: Vec::new(),
         }
     }
 
+    #[must_use]
     pub fn new(content: &str) -> Self {
         Self::with_inset(content, Inset::EMPTY)
     }
@@ -92,10 +90,6 @@ impl SimpleTreeNode {
 }
 
 impl TreeNode for SimpleTreeNode {
-    fn id(&self) -> Uuid {
-        self.id
-    }
-
     fn content(&self) -> String {
         self.content.clone()
     }
@@ -116,16 +110,14 @@ impl TreeNode for SimpleTreeNode {
 pub struct PlaceholderTreeNode(Vec<Box<dyn TreeNode>>);
 
 impl PlaceholderTreeNode {
+
+    #[must_use]
     pub const fn new() -> Self {
         Self(Vec::new())
     }
 }
 
 impl TreeNode for PlaceholderTreeNode {
-    fn id(&self) -> Uuid {
-        Uuid::new_v4()
-    }
-
     fn content(&self) -> String {
         "PLACEHOLDER".to_owned()
     }

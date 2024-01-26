@@ -1,36 +1,40 @@
 use std::io::Write;
 
-use crate::text::LineBuffer;
+use anyhow::Context;
+
+use crate::text::{LineBuffer, LinePosition};
 
 pub trait Liner<W: Write> {
     fn print_connections(
         &self,
         buffer: &mut LineBuffer<W>,
-        row: i32,
-        top_connection: i32,
-        bottom_connections: &[i32],
-    ) -> i32;
+        row: u32,
+        top_connection: u32,
+        bottom_connections: &[u32],
+    ) -> anyhow::Result<u32>;
 }
 
 #[derive(Debug)]
 pub struct DefaultLiner {
     connections: [char; 13],
-    top_height: i32,
-    bottom_height: i32,
+    top_height: u32,
+    bottom_height: u32,
     display_bracket: bool,
 }
 
 impl Default for DefaultLiner {
     fn default() -> Self {
-        Self::builder().build()
+        Self::builder().unicode().build()
     }
 }
 
 impl DefaultLiner {
-    pub fn new_unicode() -> Self {
-        Self::builder().unicde().build()
+    #[must_use]
+    pub fn new_ascii() -> Self {
+        Self::builder().ascii().build()
     }
 
+    #[must_use]
     pub const fn builder() -> DefaultLinerBuilder {
         DefaultLinerBuilder::new()
     }
@@ -38,27 +42,29 @@ impl DefaultLiner {
     fn print_top_connection<W: Write>(
         &self,
         buffer: &mut LineBuffer<W>,
-        row: i32,
-        start: i32,
-        top_connection: i32,
-    ) {
-        let mut top_connection_line = " ".repeat((top_connection - start) as usize);
+        row: u32,
+        start: u32,
+        top_connection: u32,
+    ) -> anyhow::Result<()> {
+        let mut top_connection_line = " ".repeat(usize::try_from(top_connection - start)?);
         top_connection_line.push(self.connections[0]);
 
         for i in 0..self.top_height {
-            buffer.write((row + i) as usize, start as usize, &top_connection_line);
+            buffer.write(LinePosition::new(row + i, start)?, &top_connection_line);
         }
+
+        Ok(())
     }
 
     fn print_bottom_connections<W: Write>(
         &self,
         buffer: &mut LineBuffer<W>,
-        row: i32,
-        start: i32,
-        top_height_with_bracket: i32,
-        full_height: i32,
-        bottom_connections: &[i32],
-    ) {
+        row: u32,
+        start: u32,
+        top_height_with_bracket: u32,
+        full_height: u32,
+        bottom_connections: &[u32],
+    ) -> anyhow::Result<()> {
         let mut bottom_connection_line = String::new();
         let mut pos = start;
 
@@ -71,19 +77,21 @@ impl DefaultLiner {
         }
 
         for i in top_height_with_bracket..full_height {
-            buffer.write((row + i) as usize, start as usize, &bottom_connection_line);
+            buffer.write(LinePosition::new(row + i, start)?, &bottom_connection_line);
         }
+
+        Ok(())
     }
 
     fn print_connection_bracket_line<W: Write>(
         &self,
         buffer: &mut LineBuffer<W>,
-        row: i32,
-        start: i32,
-        end: i32,
-        top_connection: i32,
-        bottom_connections: &[i32],
-    ) {
+        row: u32,
+        start: u32,
+        end: u32,
+        top_connection: u32,
+        bottom_connections: &[u32],
+    ) -> anyhow::Result<()> {
         let mut bracket_line = String::new();
 
         for i in start..=end {
@@ -93,19 +101,20 @@ impl DefaultLiner {
         }
 
         buffer.write(
-            (row + self.top_height) as usize,
-            start as usize,
+            LinePosition::new(row + self.top_height, start)?,
             &bracket_line,
         );
+
+        Ok(())
     }
 
     fn get_nth_bracket_line_char(
         &self,
-        i: i32,
-        start: i32,
-        end: i32,
-        top_connection: i32,
-        bottom_connections: &[i32],
+        i: u32,
+        start: u32,
+        end: u32,
+        top_connection: u32,
+        bottom_connections: &[u32],
     ) -> char {
         if start == end {
             self.connections[11]
@@ -129,10 +138,10 @@ impl DefaultLiner {
 
     fn get_bracket_line_char_at_top_connection(
         &self,
-        i: i32,
-        start: i32,
-        end: i32,
-        bottom_connections: &[i32],
+        i: u32,
+        start: u32,
+        end: u32,
+        bottom_connections: &[u32],
     ) -> char {
         if bottom_connections.contains(&i) {
             if i == start {
@@ -142,14 +151,12 @@ impl DefaultLiner {
             } else {
                 self.connections[7]
             }
+        } else if i == start {
+            self.connections[4]
+        } else if i == end {
+            self.connections[5]
         } else {
-            if i == start {
-                self.connections[4]
-            } else if i == end {
-                self.connections[5]
-            } else {
-                self.connections[6]
-            }
+            self.connections[6]
         }
     }
 }
@@ -158,32 +165,28 @@ impl<W: Write> Liner<W> for DefaultLiner {
     fn print_connections(
         &self,
         buffer: &mut LineBuffer<W>,
-        row: i32,
-        top_connection: i32,
-        bottom_connections: &[i32],
-    ) -> i32 {
+        row: u32,
+        top_connection: u32,
+        bottom_connections: &[u32],
+    ) -> anyhow::Result<u32> {
         use std::cmp::{max, min};
 
         let start = min(
             top_connection,
             *bottom_connections
                 .first()
-                .expect("Invalid bottom connections vector"),
+                .context("Invalid bottom connections vector")?,
         );
         let end = max(
             top_connection,
             *bottom_connections
                 .last()
-                .expect("Invalid bottom connections vector"),
+                .context("Invalid bottom connections vector")?,
         );
-        let top_height_with_bracket = self.top_height
-            + match self.display_bracket {
-                true => 1,
-                false => 0,
-            };
+        let top_height_with_bracket = self.top_height + u32::from(self.display_bracket);
         let full_height = top_height_with_bracket + self.bottom_height;
 
-        self.print_top_connection(buffer, row, start, top_connection);
+        self.print_top_connection(buffer, row, start, top_connection)?;
         self.print_connection_bracket_line(
             buffer,
             row,
@@ -191,7 +194,7 @@ impl<W: Write> Liner<W> for DefaultLiner {
             end,
             top_connection,
             bottom_connections,
-        );
+        )?;
         self.print_bottom_connections(
             buffer,
             row,
@@ -199,16 +202,16 @@ impl<W: Write> Liner<W> for DefaultLiner {
             top_height_with_bracket,
             full_height,
             bottom_connections,
-        );
+        )?;
 
-        full_height
+        Ok(full_height)
     }
 }
 
 pub struct DefaultLinerBuilder {
     connections: [char; 13],
-    top_height: i32,
-    bottom_height: i32,
+    top_height: u32,
+    bottom_height: u32,
     display_bracket: bool,
 }
 
@@ -230,12 +233,12 @@ impl DefaultLinerBuilder {
         }
     }
 
-    pub fn top_height(&mut self, top_height: i32) -> &mut Self {
+    pub fn top_height(&mut self, top_height: u32) -> &mut Self {
         self.top_height = top_height;
         self
     }
 
-    pub fn bottom_height(&mut self, bottom_height: i32) -> &mut Self {
+    pub fn bottom_height(&mut self, bottom_height: u32) -> &mut Self {
         self.bottom_height = bottom_height;
         self
     }
@@ -245,7 +248,7 @@ impl DefaultLinerBuilder {
         self
     }
 
-    pub fn unicde(&mut self) -> &mut Self {
+    pub fn unicode(&mut self) -> &mut Self {
         self.connections = Self::LINE_CHARS_UNICODE;
         self
     }
@@ -326,8 +329,9 @@ impl DefaultLinerBuilder {
         self
     }
 
+    #[must_use]
     pub const fn build(&self) -> DefaultLiner {
-        let DefaultLinerBuilder {
+        let Self {
             connections,
             top_height,
             bottom_height,

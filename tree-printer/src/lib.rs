@@ -1,6 +1,6 @@
 pub mod config;
-pub mod decorator;
-pub mod printer;
+pub mod decorators;
+pub mod printers;
 pub mod tree_node;
 pub mod text;
 mod util;

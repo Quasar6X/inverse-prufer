@@ -10,7 +10,7 @@ use std::fmt::Display;
 /// the given Prüfer code as [`usize`].
 #[must_use]
 pub fn tree_edges(PruferCode { code: prufer_code }: &PruferCode) -> Vec<(u64, u64)> {
-    // find last two zeros in vertex set and return the corresponding vertecies
+    // find last two zeros in vertex set and return the corresponding vertices
     // for the last edge pair
     fn create_last_pair(vertex_set: &[i8]) -> (u64, u64) {
         let res = vertex_set
@@ -22,16 +22,16 @@ pub fn tree_edges(PruferCode { code: prufer_code }: &PruferCode) -> Vec<(u64, u6
         (res[0], res[1])
     }
 
-    let vertecies = prufer_code.len() + 2;
-    let mut vertex_set: Vec<i8> = [0].repeat(vertecies);
+    let vertices = prufer_code.len() + 2;
+    let mut vertex_set: Vec<i8> = [0].repeat(vertices);
 
-    // count the occurence of vertecies in `prufer_code`
+    // count the occurrence of vertices in `prufer_code`
     for &value in prufer_code {
         let index = usize::try_from(value - 1).expect("Index out of bounds on current target");
         vertex_set[index] += 1;
     }
 
-    let mut edges = Vec::with_capacity(vertecies - 1);
+    let mut edges = Vec::with_capacity(vertices - 1);
 
     // create edge pairs
     for &value in prufer_code {
@@ -67,7 +67,7 @@ impl TryFrom<&[u64]> for PruferCode {
     ///
     // # Errors
     ///
-    /// If the given Prüfer code is invlaid the function returns the error variant.
+    /// If the given Prüfer code is invalid the function returns the error variant.
     /// See: [`error::InvalidPruferCode`] for more information.
     fn try_from(prufer_code: &[u64]) -> Result<Self, Self::Error> {
         let n = prufer_code.len() + 2;

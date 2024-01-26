@@ -1,26 +1,27 @@
 #[derive(Debug)]
 pub struct Inset {
-    top: i32,
-    right: i32,
-    bottom: i32,
-    left: i32,
+    top: u32,
+    right: u32,
+    bottom: u32,
+    left: u32,
 }
 
 pub struct InsetBuilder {
-    top: i32,
-    right: i32,
-    bottom: i32,
-    left: i32,
+    top: u32,
+    right: u32,
+    bottom: u32,
+    left: u32,
 }
 
 impl Inset {
-    pub const EMPTY: Inset = Self {
+    pub const EMPTY: Self = Self {
         top: 0,
         right: 0,
         bottom: 0,
         left: 0,
     };
 
+    #[must_use]
     pub const fn builder() -> InsetBuilder {
         InsetBuilder::new()
     }
@@ -36,26 +37,27 @@ impl InsetBuilder {
         }
     }
 
-    pub fn top(&mut self, top: i32) -> &mut Self {
+    pub fn top(&mut self, top: u32) -> &mut Self {
         self.top = top;
         self
     }
 
-    pub fn right(&mut self, right: i32) -> &mut Self {
+    pub fn right(&mut self, right: u32) -> &mut Self {
         self.right = right;
         self
     }
 
-    pub fn bottom(&mut self, bottom: i32) -> &mut Self {
+    pub fn bottom(&mut self, bottom: u32) -> &mut Self {
         self.bottom = bottom;
         self
     }
 
-    pub fn left(&mut self, left: i32) -> &mut Self {
+    pub fn left(&mut self, left: u32) -> &mut Self {
         self.left = left;
         self
     }
 
+    #[must_use]
     pub const fn build(&self) -> Inset {
         let Self {
             top,
